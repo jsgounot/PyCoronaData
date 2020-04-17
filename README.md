@@ -27,13 +27,16 @@ python setup.py install --user
 ```
 
 ## Quick manual
-Produce a simple dataframe from John Hopkins raw data with longitude and latitude as pivot point
+Produce a simple dataframe from John Hopkins raw data with longitude and latitude as pivot points
+
 ```python3
 from pycoronadata import CoronaData
 cd = CoronaData(["Lat", "Long"])
 print (cd.cdf)
 ```
-Combine both raw data and geographical data
+
+Combine both raw data and geographical data 
+
 ```python3
 from pycoronadata import GeoCoronaData
 
@@ -46,10 +49,12 @@ cd.data_from_day(58, report=True, fill=True)
 # Same but with continents instead of country
 cd.data_from_day(58, report=True, fill=True, geocolumn="Continent"))
 
-# Grab data from Africa with all the time period
-cd.data_from_geocol(select="Africa", geocolumn="Continent", fill=False)
+# Grab data from a specific location 
+cd.data_from_geocol(select="Africa", geocolumn="Continent", fill=True)
 ```
+
 Persistant mode : Load and save data into a file 
+
 ```python3
 from pycoronadata import PersistantGeoCoronaData
 

@@ -2,7 +2,7 @@
 # @Author: jsgounot
 # @Date:   2020-03-14 23:50:19
 # @Last modified by:   jsgounot
-# @Last Modified time: 2020-04-14 15:33:55
+# @Last Modified time: 2020-04-17 14:25:30
 
 import os
 rpath = os.path.realpath(__file__)
@@ -398,7 +398,7 @@ class GeoCoronaData(CoronaData) :
 
         # Missing countries we were not able to found
         missing = cdf[cdf["GCountry"].isna()]["Country/Region"].unique()
-        self.logger.warning(f"Countries not found with geodata (will be ignored) : {missing}")
+        self.logger.warning(f"Countries not found within geodata (will be ignored) : {missing}")
 
         # We group by country and date
         columns = ["GCountry", "Date"]

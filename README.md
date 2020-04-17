@@ -16,10 +16,13 @@ Python wrapper for [Johns Hopkins data](https://github.com/CSSEGISandData/COVID-
 
 ## Install
 Using pip
+
 ```bash
 pip install git+https://github.com/jsgounot/pycoronadata.git
 ```
+
 Or download / clone the github
+
 ```bash
 git clone https://github.com/jsgounot/pycoronadata.git
 cd pycoronadata

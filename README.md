@@ -69,7 +69,9 @@ cd.save()
 | REDay     	| New recovered cases of the day                           	|
 | DEDay     	| New deaths cases of the day                              	|
 | LRate     	| Letality rate                                            	|
+
 **GeoCoronaData and persistant mode**
+
 | ID        	| Description                                                                	|
 |-----------	|----------------------------------------------------------------------------	|
 | Country   	| Country related to each entry, confirmed using longitude and latitude data 	|

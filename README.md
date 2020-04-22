@@ -95,6 +95,9 @@ cd.save()
 | AC10K     	| Number of actives per 100,000 habitants                                    	|
 
 ## How is calculated the number of recovery ?
+
+**Edit** : Recovered cases are back ! Previous option is still usable but by default (`rtime = None`) the CSSEGI file will be used.
+
 Since [this report](https://github.com/CSSEGISandData/COVID-19/issues/1250), recovered cases are no longer provided. To get an estimation of recovered cases for each day / country, one can define a mean value of the disease period until recovery which by default is set to 14 days. With this, the number of recovered cases is then linked to both confirmed cases from X previous day and the number of deaths at a given time. Note that the value provided here is therefore only an estimation and does not reflect reality. To change the communicability period, modify the `rtime` parameter during instance construction.
 
 ## See also

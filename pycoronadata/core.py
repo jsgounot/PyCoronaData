@@ -2,7 +2,7 @@
 # @Author: jsgounot
 # @Date:   2020-03-14 23:50:19
 # @Last modified by:   jsgounot
-# @Last Modified time: 2020-04-17 14:25:30
+# @Last Modified time: 2020-04-22 17:39:38
 
 import os
 rpath = os.path.realpath(__file__)
@@ -30,7 +30,8 @@ TESTING = False
 
 TIME_SERIES = [
     "https://raw.githubusercontent.com/CSSEGISandData/COVID-19/master/csse_covid_19_data/csse_covid_19_time_series/time_series_covid19_confirmed_global.csv",
-    "https://raw.githubusercontent.com/CSSEGISandData/COVID-19/master/csse_covid_19_data/csse_covid_19_time_series/time_series_covid19_deaths_global.csv"
+    "https://raw.githubusercontent.com/CSSEGISandData/COVID-19/master/csse_covid_19_data/csse_covid_19_time_series/time_series_covid19_deaths_global.csv",
+    "https://raw.githubusercontent.com/CSSEGISandData/COVID-19/master/csse_covid_19_data/csse_covid_19_time_series/time_series_covid19_recovered_global.csv",
     ]
 
 COUNTRY_REGiONS = {"Continent", "SubRegion", "REGION_WB", "ADM0_A3"}
@@ -39,7 +40,7 @@ class CoronaData() :
 
     ALLOWED_GB = {"Province/State", "Country/Region", "Lat", "Long"}
 
-    def __init__(self, gb, rtime=14, logger=None, head=0) :
+    def __init__(self, gb, rtime=None, logger=None, head=0) :
         """        
         Object which fetch and contains coronadata from the Johns Hopkins Institut
         https://github.com/CSSEGISandData/COVID-19
@@ -54,14 +55,14 @@ class CoronaData() :
         """
 
         self.logger = logger or logging.getLogger(utils.LOG_NAME)
-        logger.debug("Initiate CoronaData instance ...")
+        self.logger.debug("Initiate CoronaData instance ...")
 
         self.check_inputs(gb)
         self._gb = gb
 
-        logger.debug("Load cdf file")
+        self.logger.debug("Load cdf file")
         self._cdf = self.load_cdf(rtime, head)
-        logger.debug("Finish instance")
+        self.logger.debug("Finish instance")
 
     @property
     def gb(self):
@@ -88,7 +89,7 @@ class CoronaData() :
         return cdf
 
     def setup_cdf(self, cdf, rtime) :
-        cdf = self.add_recovery_time_cdf(cdf, rtime)
+        cdf = self.add_time_recovery_active_cdf(cdf, rtime)
         cdf = self.add_daily_cases_cdf(cdf)
         cdf = self.add_stats_cdf(cdf)
         return cdf
@@ -139,12 +140,23 @@ class CoronaData() :
         return df
 
     @staticmethod
-    def corona_data_from_time_series(logger=None) :
+    def names_time_serie() :
+        return [bname(url).split("_")[3].title() for url in TIME_SERIES]
+
+    @staticmethod
+    def corona_data_from_time_series(logger=None, correct=True, strip=True) :
         data = [GeoCoronaData.load_from_time_serie(url, logger) for url in TIME_SERIES]
         df = data.pop(0)
 
         while data :
             df = df.merge(data.pop(0), on=list(df.columns[:5]))
+
+        if correct :
+            df = CoronaData.manual_correction(df)
+
+        if strip :
+            names = CoronaData.names_time_serie()
+            df = df[df[names].sum(axis=1) != 0]
 
         return df
 
@@ -180,8 +192,17 @@ class CoronaData() :
                 return country
         return np.nan
 
-    def add_recovery_time_cdf(self, cdf, rtime) :
+    def add_time_recovery_active_cdf(self, cdf, rtime) :
+        # Since Hopkins add (again) the recovered number
+        # add_recovery_time_cdf is no longer needed 
+
         cdf["Date"] = pd.to_datetime(cdf["Date"], infer_datetime_format=True).dt.date
+        if rtime is not None : cdf = add_recovery_time_cdf(cdf, rtime)
+        cdf["Active"] = cdf["Confirmed"] - (cdf["Deaths"] + cdf["Recovered"])
+
+        return cdf
+
+    def add_recovery_time_cdf(self, cdf, rtime) :
 
         subdf = cdf.copy()
         subdf["RepDays"] = subdf["RepDays"] + rtime
@@ -203,8 +224,6 @@ class CoronaData() :
         # Especially at the start of the infection in one country
         # This variation also affect the REDay. Patch after does not correct REDay
         # cdf.loc[cdf["Recovered"] < 0, "Recovered"] = 0
-
-        cdf["Active"] = cdf["Confirmed"] - (cdf["Deaths"] + cdf["Recovered"])
 
         return cdf
 
@@ -236,16 +255,13 @@ class CoronaData() :
 
     def generate_cdf(self) :
         cdf = GeoCoronaData.corona_data_from_time_series(self.logger)
-
-        # Manual correction
-        cdf = GeoCoronaData.manual_correction(cdf)
-
-        # We remove row for which nothing is found
-        cdf = cdf[cdf[["Confirmed", "Deaths"]].sum(axis=1) != 0]
         
         # We groupby geocols and date
         columns = self.gb + ["Date"]
-        cdf = cdf.groupby(columns)["Confirmed", "Deaths"].sum().astype(int).reset_index()
+
+        names = CoronaData.names_time_serie()
+        cdf = cdf.groupby(columns)[names].sum().astype(int).reset_index()
+        
         cdf["RepDays"] = GeoCoronaData.repDays(cdf["Date"])
 
         columns = self.gb + ["RepDays"]
@@ -257,7 +273,7 @@ class GeoCoronaData(CoronaData) :
 
     GEOCOLS = {"Country", "Continent", "SubRegion", "REGION_WB", "REGION_UN", "ADM0_A3"}
 
-    def __init__(self, geofile=None, rtime=14, logger=None, head=0) :
+    def __init__(self, geofile=None, rtime=None, logger=None, head=0) :
         """        
         Object containing both corona data and geographic information
         All data are from a geo
@@ -269,13 +285,13 @@ class GeoCoronaData(CoronaData) :
             head {int} -- [Number of row if a subset is needed (dataframe.head)] (default: {0})
         """
 
-        logger = logger or logging.getLogger(utils.LOG_NAME)
-        logger.debug("Create GeoCoronaData instance")
+        self.logger = logger or logging.getLogger(utils.LOG_NAME)
+        self.logger.debug("Create GeoCoronaData instance")
         
-        logger.debug("Load GDF")
+        self.logger.debug("Load GDF")
         self._gdf = self.load_gdf(geofile)
         
-        logger.debug("Initiate primary CoronaData instance")
+        self.logger.debug("Initiate primary CoronaData instance")
         super().__init__(rtime=rtime, logger=logger, head=head, gb=["Country"])
 
     def allowed_gb(self) :
@@ -375,12 +391,6 @@ class GeoCoronaData(CoronaData) :
     def generate_cdf(self) :
         cdf = GeoCoronaData.corona_data_from_time_series(self.logger)
 
-        # Manual correction
-        cdf = GeoCoronaData.manual_correction(cdf)
-
-        # We remove row for which nothing is found
-        cdf = cdf[cdf[["Confirmed", "Deaths"]].sum(axis=1) != 0]
-
         # We confirm country using longitude and latitue
         # since gdf countries does not have the same name than cdf data
         gdfd = self.gdf.set_index("Country")["geometry"].to_dict()
@@ -402,7 +412,8 @@ class GeoCoronaData(CoronaData) :
 
         # We group by country and date
         columns = ["GCountry", "Date"]
-        cdf = cdf.groupby(columns)["Confirmed", "Deaths"].sum().astype(int).reset_index()
+        names = CoronaData.names_time_serie()
+        cdf = cdf.groupby(columns)[names].sum().astype(int).reset_index()
         cdf.columns = [{"GCountry" : "Country"}.get(column, column) for column in cdf.columns]
 
         # Add country info used by groupby
@@ -533,7 +544,7 @@ class GeoCoronaData(CoronaData) :
 
 class PersistantGeoCoronaData(GeoCoronaData) :
 
-    def __init__(self, * args, fname=None, utime=None, rtime=14, ** kwargs) :      
+    def __init__(self, * args, fname=None, utime=None, rtime=None, ** kwargs) :    
         self._fname = utils.TMPFname(ext="csv") if fname is None else fname
         super().__init__(* args, rtime=rtime, ** kwargs)
         self._rtime = rtime

@@ -2,7 +2,7 @@
 # @Author: jsgounot
 # @Date:   2020-03-14 23:50:19
 # @Last modified by:   jsgounot
-# @Last Modified time: 2020-04-22 18:08:56
+# @Last Modified time: 2020-04-22 18:09:44
 
 import os
 rpath = os.path.realpath(__file__)
@@ -393,10 +393,6 @@ class GeoCoronaData(CoronaData) :
 
     def generate_cdf(self) :
         cdf = GeoCoronaData.corona_data_from_time_series(self.logger)
-
-        print (cdf)
-        print ("done")
-        exit()
 
         # We confirm country using longitude and latitue
         # since gdf countries does not have the same name than cdf data

@@ -2,7 +2,7 @@
 # @Author: jsgounot
 # @Date:   2020-03-14 23:50:19
 # @Last modified by:   jsgounot
-# @Last Modified time: 2020-04-22 17:39:38
+# @Last Modified time: 2020-04-22 18:08:56
 
 import os
 rpath = os.path.realpath(__file__)
@@ -149,7 +149,10 @@ class CoronaData() :
         df = data.pop(0)
 
         while data :
-            df = df.merge(data.pop(0), on=list(df.columns[:5]))
+            df = df.merge(data.pop(0), on=list(df.columns[:5]), how="outer")
+
+        for name in CoronaData.names_time_serie() :
+            df[name] = df[name].fillna(0).astype(int)
 
         if correct :
             df = CoronaData.manual_correction(df)
@@ -390,6 +393,10 @@ class GeoCoronaData(CoronaData) :
 
     def generate_cdf(self) :
         cdf = GeoCoronaData.corona_data_from_time_series(self.logger)
+
+        print (cdf)
+        print ("done")
+        exit()
 
         # We confirm country using longitude and latitue
         # since gdf countries does not have the same name than cdf data

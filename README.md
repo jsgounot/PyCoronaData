@@ -11,7 +11,7 @@ Python wrapper for [Johns Hopkins data](https://github.com/CSSEGISandData/COVID-
 - Fetch and construct a pandas dataframe based on Johns Hopkins data
 - Estimate the number of recovery cases for each day
 - Add countries informations (geometry, population size) for each country and clean country information from raw data
-- Add some statistics such as letaly rate, number of cases per 100.000 habitants for each country
+- Add some statistics such as lethaly rate, number of cases per 100.000 habitants for each country
 - Afford a persistent mode for interactive application, allowing dynamic update
 
 ## Install
@@ -76,7 +76,7 @@ cd.save()
 | CODay     	| New confirmed cases of the day                           	|
 | REDay     	| New recovered cases of the day                           	|
 | DEDay     	| New deaths cases of the day                              	|
-| LRate     	| Letality rate                                            	|
+| LRate     	| Lethality rate                                            |
 
 **GeoCoronaData and persistant mode**
 

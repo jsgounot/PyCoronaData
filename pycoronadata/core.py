@@ -2,7 +2,7 @@
 # @Author: jsgounot
 # @Date:   2020-03-14 23:50:19
 # @Last modified by:   jsgounot
-# @Last Modified time: 2020-04-22 18:09:44
+# @Last Modified time: 2020-05-03 18:16:44
 
 import os
 rpath = os.path.realpath(__file__)
@@ -250,7 +250,7 @@ class CoronaData() :
         return cdf.drop(columns_old, axis=1)
 
     def add_stats_cdf(self, cdf) :
-        # Letality rates
+        # Lethality rates
         cdf["LRate"] = cdf["Deaths"] / cdf[["Deaths", "Recovered"]].sum(axis=1)
         cdf["LRate"] = cdf["LRate"].fillna(0)  
 
